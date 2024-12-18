@@ -1,9 +1,8 @@
-package com.mjaseem.prophecy.engine;
+package com.mjaseem.trick.engine;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class GameHistory {
     private final List<Trick> tricks = new ArrayList<>();
@@ -14,16 +13,6 @@ public class GameHistory {
 
     public List<Trick> getTricks() {
         return Collections.unmodifiableList(tricks);
-    }
-
-    public List<Card> getPlayedCards() {
-        return tricks.stream().map(Trick::getPlays)
-                .flatMap(e -> e.stream().map(Map.Entry::getValue))
-                .toList();
-    }
-
-    public void reset() {
-        tricks.clear();
     }
 
     @Override

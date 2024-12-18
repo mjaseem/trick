@@ -1,11 +1,11 @@
-package com.mjaseem.prophecy.engine;
+package com.mjaseem.trick.engine;
 
 import java.util.*;
 
 // Inner class to represent a single trick
 public final class Trick {
     private final List<Map.Entry<Player, Card>> plays;
-    private Player winner;
+    private String winner;
 
     public Trick() {
         this.plays = new ArrayList<>();
@@ -16,25 +16,30 @@ public final class Trick {
     }
 
     public void setWinner(Player winner) {
-        this.winner = winner;
+        this.winner = winner.getName();
     }
 
-    public List<Map.Entry<Player, Card>> getPlays() {
+    public List<Map.Entry<Player, Card>> plays() {
         return Collections.unmodifiableList(plays);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("[");
         for (Map.Entry<Player, Card> entry : plays) {
             sb.append(entry.getKey().getName()).append(": ")
                     .append(entry.getValue())
-                    .append(entry.getKey().equals(winner) ? "!" : " ")
-                    .append("\n");
+                    .append(entry.getKey().getName().equals(winner) ? "!" : "")
+                    .append("; ");
         }
+        sb.append("]");
         return sb.toString();
     }
 
+    public String getWinner() {
+        return winner;
+    }
 
     @Override
     public boolean equals(Object obj) {

@@ -1,6 +1,6 @@
-package com.mjaseem.prophecy.strategy;
+package com.mjaseem.trick.strategy;
 
-import com.mjaseem.prophecy.engine.*;
+import com.mjaseem.trick.engine.*;
 
 import java.util.List;
 import java.util.Map;
@@ -12,9 +12,9 @@ import java.util.stream.IntStream;
 public class RandomStrategy implements Strategy {
     @Override
     public int chooseCard(List<Card> hand, GameHistory history, Trick trick, Records.Suit trumpSuit) {
-        List<Map.Entry<Player, Card>> plays = trick.getPlays();
+        List<Map.Entry<Player, Card>> plays = trick.plays();
         OptionalInt any = IntStream.range(0, hand.size()).filter(i ->
-                plays.isEmpty() || hand.get(i).getSuit().equals(plays.getFirst().getValue().getSuit())).findAny();
+                plays.isEmpty() || hand.get(i).suit().equals(plays.getFirst().getValue().suit())).findAny();
         return any.orElse(new Random().nextInt(hand.size()));
     }
 }

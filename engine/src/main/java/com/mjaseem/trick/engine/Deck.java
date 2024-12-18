@@ -1,4 +1,4 @@
-package com.mjaseem.prophecy.engine;
+package com.mjaseem.trick.engine;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +9,7 @@ public class Deck {
     private final List<Card> cards = new ArrayList<>();
 
     public Deck() {
-        for (Records.Suit suit : com.mjaseem.prophecy.engine.Records.Suit.values()) {
+        for (Records.Suit suit : Records.Suit.values()) {
             for (int i = 1; i <= 14; i++) {
                 cards.add(new Card(suit, i));
             }
@@ -30,7 +30,7 @@ public class Deck {
 
     public void reset() {
         cards.clear();
-        for (Records.Suit suit : com.mjaseem.prophecy.engine.Records.Suit.values()) {
+        for (Records.Suit suit : Records.Suit.values()) {
             for (int i = 1; i <= 14; i++) {
                 cards.add(new Card(suit, i));
             }

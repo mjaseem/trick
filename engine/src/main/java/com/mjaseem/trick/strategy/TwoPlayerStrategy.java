@@ -1,6 +1,6 @@
-package com.mjaseem.prophecy.strategy;
+package com.mjaseem.trick.strategy;
 
-import com.mjaseem.prophecy.engine.*;
+import com.mjaseem.trick.engine.*;
 
 import java.util.*;
 
@@ -15,7 +15,7 @@ public class TwoPlayerStrategy implements Strategy {
     @Override
     public int chooseCard(List<Card> hand, GameHistory history, Trick trick, Records.Suit trumpSuit) {
         // Determine if we are the first player (no previous plays)
-        boolean isFirstPlayer = trick.getPlays().isEmpty();
+        boolean isFirstPlayer = trick.plays().isEmpty();
 
         if (isFirstPlayer) {
             if (version == 4) {
@@ -29,9 +29,9 @@ public class TwoPlayerStrategy implements Strategy {
             }
         } else {
             // If it's not the first player, handle based on the leading card
-            Card leadingCard = trick.getPlays().getFirst().getValue();
+            Card leadingCard = trick.plays().getFirst().getValue();
 
-            // Play the closest higher card in the leading getSuit, or the lowest if none higher
+            // Play the closest higher card in the leading suit, or the lowest if none higher
             return playClosestHigherCard(hand, leadingCard)
                     .or(() -> playLowestCard(hand, leadingCard))
                     .or(() -> playLowestTrumpCard(hand, trumpSuit))
@@ -46,14 +46,14 @@ public class TwoPlayerStrategy implements Strategy {
 
         if (!weakSuitCards.isEmpty()) {
             // Play a high card from opponent's weak suit
-            return Optional.of(hand.indexOf(Collections.max(weakSuitCards, Comparator.comparingInt(Card::getRank))));
+            return Optional.of(hand.indexOf(Collections.max(weakSuitCards, Comparator.comparingInt(Card::rank))));
         }
 
-        // Sort cards by getRank
+        // Sort cards by rank
         List<Card> cards = filterCardsExcludingSuits(hand, Collections.singletonList(trumpSuit));
         if (cards.isEmpty()) return Optional.empty();
         Card card = cards.stream()
-                .min(Comparator.comparingInt(c -> Math.abs(c.getRank() - 7)))
+                .min(Comparator.comparingInt(c -> Math.abs(c.rank() - 7)))
                 .orElseThrow(() -> new IllegalStateException("Hand should never be empty."));
         // Return the middle card
         return Optional.of(hand.indexOf(card));
@@ -63,7 +63,7 @@ public class TwoPlayerStrategy implements Strategy {
         if (suit == null) return Collections.emptyList();
         List<Card> filtered = new ArrayList<>();
         for (Card card : hand) {
-            if (card.getSuit() == suit) {
+            if (card.suit() == suit) {
                 filtered.add(card);
             }
         }
@@ -73,7 +73,7 @@ public class TwoPlayerStrategy implements Strategy {
     private List<Card> filterCardsExcludingSuits(List<Card> hand, List<Records.Suit> suits) {
         List<Card> filtered = new ArrayList<>();
         for (Card card : hand) {
-            if (!suits.contains(card.getSuit())) {
+            if (!suits.contains(card.suit())) {
                 filtered.add(card);
             }
         }
@@ -82,38 +82,38 @@ public class TwoPlayerStrategy implements Strategy {
 
     private Optional<Integer> playHighestNonTrumpCard(List<Card> hand, Records.Suit trumpSuit) {
         return hand.stream()
-                .filter(card -> card.getSuit() != trumpSuit)
-                .max(Comparator.comparingInt(Card::getRank))
+                .filter(card -> card.suit() != trumpSuit)
+                .max(Comparator.comparingInt(Card::rank))
                 .map(hand::indexOf);
     }
 
     private Optional<Integer> playLowestNonTrumpCard(List<Card> hand, Records.Suit trumpSuit) {
         return hand.stream()
-                .filter(card -> card.getSuit() != trumpSuit)
-                .min(Comparator.comparingInt(Card::getRank))
+                .filter(card -> card.suit() != trumpSuit)
+                .min(Comparator.comparingInt(Card::rank))
                 .map(hand::indexOf);
     }
 
     private Optional<Integer> playClosestHigherCard(List<Card> hand, Card leadingCard) {
         return hand.stream()
-                .filter(card -> card.getSuit() == leadingCard.getSuit())
-                .filter(card -> card.getRank() > leadingCard.getRank())
-                .min(Comparator.comparingInt(Card::getRank))
+                .filter(card -> card.suit() == leadingCard.suit())
+                .filter(card -> card.rank() > leadingCard.rank())
+                .min(Comparator.comparingInt(Card::rank))
                 .map(hand::indexOf);
     }
 
     private Optional<Integer> playLowestCard(List<Card> hand, Card leadingCard) {
         return hand.stream()
-                .filter(card -> card.getSuit() == leadingCard.getSuit())
-                .min(Comparator.comparingInt(Card::getRank))
+                .filter(card -> card.suit() == leadingCard.suit())
+                .min(Comparator.comparingInt(Card::rank))
                 .map(hand::indexOf);
     }
 
 
     private Optional<Integer> playLowestTrumpCard(List<Card> hand, Records.Suit trumpSuit) {
         return hand.stream()
-                .filter(card -> card.getSuit() == trumpSuit)
-                .min(Comparator.comparingInt(Card::getRank))
+                .filter(card -> card.suit() == trumpSuit)
+                .min(Comparator.comparingInt(Card::rank))
                 .map(hand::indexOf);
 
     }
@@ -131,8 +131,8 @@ public class TwoPlayerStrategy implements Strategy {
     private Map<Records.Suit, Integer> countOpponentSuitPlays(GameHistory history) {
         Map<Records.Suit, Integer> suitCounts = new HashMap<>();
         for (Trick trick : history.getTricks()) {
-            for (Map.Entry<Player, Card> play : trick.getPlays()) {
-                Records.Suit suit = play.getValue().getSuit();
+            for (Map.Entry<Player, Card> play : trick.plays()) {
+                Records.Suit suit = play.getValue().suit();
                 suitCounts.put(suit, suitCounts.getOrDefault(suit, 0) + 1);
             }
         }
@@ -141,7 +141,7 @@ public class TwoPlayerStrategy implements Strategy {
 
     private int playLowestCard(List<Card> hand) {
         return hand.stream()
-                .min(Comparator.comparingInt(Card::getRank))
+                .min(Comparator.comparingInt(Card::rank))
                 .map(hand::indexOf)
                 .orElseThrow(() -> new IllegalStateException("No card to play"));
     }
