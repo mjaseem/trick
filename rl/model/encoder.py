@@ -1,13 +1,31 @@
 import random
 from typing import List, Optional
 
-from engine import constants, GameState, Trick, PlayerState, Card, Suit, GameHistory
+from engine import constants, GameState, Trick, PlayerState, Card, Suit, GameHistory, IllegalMoveException
 
 MAX_HAND_SIZE = constants.MAX_CARDS_IN_HAND  # Max number of cards per player
 ENCODE_ONLY_LAST_TRICK = True
 PLAYER_COUNT = 2
 VECTOR_SIZE = 5 * MAX_HAND_SIZE + 4 + (10 if ENCODE_ONLY_LAST_TRICK else (
         5 * PLAYER_COUNT * MAX_HAND_SIZE))  # 4 for trump suit, 13 tricks with 5 cards each
+
+
+def decode(state_vector: List[float], game_state: GameState, action: int, player: str) -> int:
+    player_state = next((p for p in game_state.players if p.name == player), None)
+    if player_state is None:
+        raise ValueError(f"Player {player} not found")
+
+    hand_vector = state_vector[0:5 * MAX_HAND_SIZE]
+
+    card_vector = hand_vector[action * 5:(action + 1) * 5]
+
+    if card_vector == [0.0, 0.0, 0.0, 0.0, 0.0]:
+        raise IllegalMoveException(player, "Action does not correspond to any card in hand")
+    for i, card in enumerate(player_state.hand):
+        if _encode_card(card) == card_vector:
+            return i
+
+    raise ValueError("Action does not correspond to any card in hand")
 
 
 def encode(game_state: GameState, player: str) -> List[float]:
@@ -100,7 +118,6 @@ def _encode_trick(trick: Trick, player_count: int) -> List[float]:
         trick_vector.extend(_encode_card(None))  # Empty card
 
     return trick_vector
-
 
 # history = GameHistory()
 # history.tricks = [Trick()]

@@ -14,13 +14,14 @@ from strategy.prompting_strategy import PromptingStrategy
 class TrickEnv(gym.Env):
     def __init__(self):
         super(TrickEnv, self).__init__()
+        self.state_vector = None
         self.prompting_strategy = PromptingStrategy()
         players = {
             "AI": self.prompting_strategy,
             "Engine": TwoPlayerStrategy()
         }
         self.game_engine = GameEngine(players)
-        self.action_space = gym.spaces.Discrete(constants.MAX_CARD_RANK)  # 13 possible actions (cards to play)
+        self.action_space = gym.spaces.Discrete(constants.MAX_CARDS_IN_HAND)  # 13 possible actions (cards to play)
         self.vector_size = encoder.VECTOR_SIZE
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=(self.vector_size,), dtype=np.float32)
 
@@ -28,12 +29,15 @@ class TrickEnv(gym.Env):
         # print("Resetting the environment")
         self.game_engine.reset()
         state = self.game_engine.get_game_state()
-        return np.array(encoder.encode(game_state=state, player="AI"), dtype=np.float32), state.__dict__
+        self.state_vector = encoder.encode(game_state=state, player="AI")
+        return np.array(self.state_vector, dtype=np.float32), state.__dict__
 
     def step(self, action):
         valid_move = True
         try:
-            self.prompting_strategy.set_next_play(action)
+            decode = encoder.decode(state_vector=self.state_vector, game_state=self.game_engine.get_game_state(),
+                                    action=action, player="AI")
+            self.prompting_strategy.set_next_play(decode)
             self.game_engine.run()
         except IllegalMoveException as e:
             valid_move = False
@@ -42,12 +46,12 @@ class TrickEnv(gym.Env):
 
         state = self.game_engine.get_game_state()
         done = state.turn_count >= constants.MAX_CARDS_IN_HAND
-        return np.array(encoder.encode(game_state=state, player="AI"),
-                        dtype=np.float32), 10 if valid_move else -100, done, False, state.__dict__
+        self.state_vector = encoder.encode(game_state=state, player="AI")
+        return np.array(self.state_vector, dtype=np.float32), 1 if valid_move else -1, done, False, state.__dict__
 
     def render(self, mode="human"):
         state = self.game_engine.get_game_state()
-        print("; ".join(str(player) for player in state.players)) # Optional visualization logic
+        print("; ".join(str(player) for player in state.players))  # Optional visualization logic
 
 
 gym.register("TrickEnv-v0", entry_point="trick_env:TrickEnv", max_episode_steps=200)
