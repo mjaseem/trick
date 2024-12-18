@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // Main game engine class
@@ -67,7 +64,7 @@ public class GameEngine {
             }
 
             while (currentTrick.plays().size() < players.size()) {
-                Player currentPlayer = players.get(currentPlayerIndex);;
+                Player currentPlayer = players.get(currentPlayerIndex);
                 if (currentPlayer.shouldWait()) {
                     log.debug("halting operation to get external input. Current trick: {}", currentTrick);
                     return;
@@ -83,11 +80,12 @@ public class GameEngine {
             currentPlayerIndex = players.indexOf(winner); // Update leading player for the next trick
             turnCount++;
         }
+        log.info("Game over. Winner :{}", players.stream().max(Comparator.comparingInt(Player::getScore)).orElseThrow().getName());
     }
 
     public Records.GameState getGameState() {
         List<Records.PlayerState> playerStates = players.stream().map(Player::playerState).toList();
-        return new Records.GameState(playerStates, turnCount, gameHistory);
+        return new Records.GameState(playerStates, turnCount, gameHistory, Records.Suit.values()[trumpSuit]);
     }
 
     private Player determineWinner(Trick trick, Records.Suit trumpSuit) {

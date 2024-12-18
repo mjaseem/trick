@@ -19,6 +19,6 @@ public interface Records {
         HEARTS, CLUBS, DIAMONDS, SPADES
     }
 
-    record GameState(List<PlayerState> players, int turnCount, GameHistory gameHistory) {
+    record GameState(List<PlayerState> players, int turnCount, GameHistory gameHistory, Suit trump) {
     }
 }

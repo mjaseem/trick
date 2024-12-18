@@ -18,7 +18,7 @@ import static com.mjaseem.trick.engine.Records.MAX_CARDS;
 @RequestMapping("/")
 public class GameController {
     private static final Logger log = LoggerFactory.getLogger(GameController.class);
-    private static final String AI = "AI";
+    private static final String CLIENT_PLAYER_NAME = "AI";
 
     private final PromptingStrategy promptingStrategy;
     private GameEngine gameEngine;
@@ -28,7 +28,7 @@ public class GameController {
     public GameController() {
         this.promptingStrategy = new PromptingStrategy();
         this.players = List.of(new Records.PlayerConfig("V4", new TwoPlayerStrategy(4)),
-                new Records.PlayerConfig(AI, promptingStrategy));
+                new Records.PlayerConfig(CLIENT_PLAYER_NAME, promptingStrategy));
         this.gameEngine = new GameEngine(players); // Initialize your engine here
     }
 
@@ -36,7 +36,8 @@ public class GameController {
     public Map<String, Object> resetGame() {
         this.gameEngine = new GameEngine(players); // Reset the thegame
         Map<String, Object> response = new HashMap<>();
-        response.put("state", GameStateEncoder.encode(gameEngine.getGameState())); // Encode initial state
+        response.put("state", new DetailedEncoder().encode(gameEngine.getGameState(), CLIENT_PLAYER_NAME)); // Encode initial state
+        response.put("info", gameEngine.getGameState());
         return response;
     }
 
@@ -50,8 +51,9 @@ public class GameController {
             Records.GameState gameState = gameEngine.getGameState();
 
             Map<String, Object> response = new HashMap<>();
-            response.put("state", GameStateEncoder.encode(gameState)); // Encode new state
-            response.put("reward", 1); //TODO  Reward for the action
+            response.put("state", new DetailedEncoder().encode(gameState, CLIENT_PLAYER_NAME)); // Encode new state
+            response.put("info", gameState);
+            response.put("reward", 1);
             response.put("done", gameState.turnCount() == MAX_CARDS); // Is game over
             return response; // Perform action in engine
         } catch (GameEngine.BadMoveException e) {
@@ -59,9 +61,10 @@ public class GameController {
             Records.GameState gameState = gameEngine.getGameState();
             log.info("Current trick {}", gameState.gameHistory().getTricks().getLast());
             Map<String, Object> response = new HashMap<>();
-            response.put("state", GameStateEncoder.encode(gameState)); // Encode new state
-            response.put("reward", 0); // TODO what is a horrible reward
-            response.put("done", false); // Is game over
+            response.put("state", new DetailedEncoder().encode(gameState, CLIENT_PLAYER_NAME)); // Encode new state
+            response.put("reward", -10);
+            response.put("done", false);
+            response.put("info", gameState);
             return response;
         }
 

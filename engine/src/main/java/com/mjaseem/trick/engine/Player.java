@@ -30,6 +30,9 @@ public class Player {
             throw new IllegalStateException("Hand is empty. Can't play!");
         }
         int cardI = strategy.chooseCard(hand, history, trick, trumpSuit);
+        if (cardI < 0 || cardI >= hand.size()) {
+            throw new GameEngine.BadMoveException(name, "chosen index out of bound");
+        }
         Card card = hand.get(cardI);
         Records.Suit leadSuit = trick.plays().isEmpty() ? null : trick.plays().getFirst().getValue().suit();
         if (leadSuit != null && card.suit() != leadSuit && hand.stream().anyMatch(c -> c.suit() == leadSuit)) {

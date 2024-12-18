@@ -6,11 +6,12 @@ import java.util.List;
 
 // Deck of cards
 public class Deck {
+    public static final int MAX_CARD_RANK = 14;
     private final List<Card> cards = new ArrayList<>();
 
     public Deck() {
         for (Records.Suit suit : Records.Suit.values()) {
-            for (int i = 1; i <= 14; i++) {
+            for (int i = 1; i <= MAX_CARD_RANK; i++) {
                 cards.add(new Card(suit, i));
             }
         }

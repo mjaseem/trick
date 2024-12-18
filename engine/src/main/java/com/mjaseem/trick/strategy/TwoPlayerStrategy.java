@@ -18,15 +18,15 @@ public class TwoPlayerStrategy implements Strategy {
         boolean isFirstPlayer = trick.plays().isEmpty();
 
         if (isFirstPlayer) {
-            if (version == 4) {
-                return selectMidRangeNonTrumpCard(history, hand, trumpSuit).orElseGet(() -> playLowestCard(hand));
-            } else if (version == 3) {
+//            if (version == 4) {
+//                return selectMidRangeNonTrumpCard(history, hand, trumpSuit).orElseGet(() -> playLowestCard(hand));
+//            } else if (version == 3) {
+//                return playHighestNonTrumpCard(hand, trumpSuit).orElseGet(() -> playLowestCard(hand));
+//            } else if (version == 2 && hand.size() < 8) {
                 return playHighestNonTrumpCard(hand, trumpSuit).orElseGet(() -> playLowestCard(hand));
-            } else if (version == 2 && hand.size() < 8) {
-                return playHighestNonTrumpCard(hand, trumpSuit).orElseGet(() -> playLowestCard(hand));
-            } else {
-                return playLowestNonTrumpCard(hand, trumpSuit).orElseGet(() -> playLowestCard(hand));
-            }
+//            } else {
+//                return playLowestNonTrumpCard(hand, trumpSuit).orElseGet(() -> playLowestCard(hand));
+//            }
         } else {
             // If it's not the first player, handle based on the leading card
             Card leadingCard = trick.plays().getFirst().getValue();
