@@ -43,7 +43,7 @@ class TrickEnv(gym.Env):
         state = self.game_engine.get_game_state()
         done = state.turn_count >= constants.MAX_CARDS_IN_HAND
         return np.array(encoder.encode(game_state=state, player="AI"),
-                        dtype=np.float32), 1 if valid_move else -100, done, False, state.__dict__
+                        dtype=np.float32), 10 if valid_move else -100, done, False, state.__dict__
 
     def render(self, mode="human"):
         state = self.game_engine.get_game_state()

@@ -30,6 +30,8 @@ class GameEngine:
         self.deck.reset()
         self.deck.shuffle()
         self.deal_cards()
+        for player in self.players:
+            player.reset()
         self.turn_count = 0
         self.trump_suit = random.choice(list(Suit))
         self.current_player_index = random.randint(0, len(self.players) - 1)
@@ -84,7 +86,8 @@ class GameEngine:
 
         # After all tricks, determine the overall winner
         final_winner = max(self.players, key=lambda player: player.score)
-        print(f"Game over. Winner: {final_winner.name}")
+        if config.DEBUG:
+            print(f"Game over. Winner: {final_winner.name}")
 
     def determine_winner(self, trick: Trick) -> Player:
         lead_suit = trick.plays[0][1].suit

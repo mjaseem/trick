@@ -49,3 +49,6 @@ class Player:
     def __str__(self) -> str:
         return f"{self.name} (Score: {self.score}, Hand: {[str(card) for card in self.hand]})"
 
+    def reset(self):
+        self.score = 0
+
