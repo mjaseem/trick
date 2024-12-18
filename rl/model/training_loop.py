@@ -17,11 +17,11 @@ def main():
     timesteps = 1000000
     checkpoint_callback = CheckpointCallback(save_freq=timesteps // 3, save_path=checkpoints_dir)
     env = gym.make("TrickEnv-v0")
-    model = PPO("MlpPolicy", env, verbose=1,   tensorboard_log=log_dir, learning_rate=0.01,
-                # clip_range=0.8, ent_coef=0.05, batch_size=256
-     )
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir, learning_rate=0.01,
+                clip_range=0.5, ent_coef=0.02,
+                )
 
-    # model.load(models_dir + "model-v6_lr0.005_reward-v0.zip")
+    model.load(models_dir + "rl_model_333333_steps.zip")
 
     if train:
         model.learn(total_timesteps=timesteps, progress_bar=True, callback=checkpoint_callback)
