@@ -33,6 +33,7 @@ class GameEngine:
         for player in self.players:
             player.reset()
         self.turn_count = 0
+        self.game_history.reset()
         self.trump_suit = random.choice(list(Suit))
         self.current_player_index = random.randint(0, len(self.players) - 1)
         if config.DEBUG:

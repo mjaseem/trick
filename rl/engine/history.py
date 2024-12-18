@@ -17,3 +17,6 @@ class GameHistory:
         return "\n".join(
             f"Trick {i + 1}: {trick}" for i, trick in enumerate(self.tricks)
         )
+
+    def reset(self):
+        self.tricks = []
