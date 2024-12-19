@@ -16,16 +16,20 @@ def decode(state_vector: List[float], game_state: GameState, action: int, player
         raise ValueError(f"Player {player} not found")
 
     hand_vector = state_vector[0:5 * MAX_HAND_SIZE]
-
     card_vector = hand_vector[action * 5:(action + 1) * 5]
 
     if card_vector == [0.0, 0.0, 0.0, 0.0, 0.0]:
         raise IllegalMoveException(player, "Action does not correspond to any card in hand")
-    for i, card in enumerate(player_state.hand):
-        if _encode_card(card) == card_vector:
-            return i
 
-    raise ValueError("Action does not correspond to any card in hand")
+    selected_card = _decode_card(card_vector)
+    lead_suit = _lead_suit_from_game_state(game_state)
+    if lead_suit and selected_card.suit != lead_suit:
+        for card in player_state.hand:
+            if card.suit == lead_suit:
+                raise IllegalMoveException(player, f"Must follow suit: {lead_suit}")
+    if selected_card not in player_state.hand:
+        raise Exception(player, f"Card {selected_card} not in hand: {selected_card}")
+    return player_state.hand.index(selected_card)
 
 
 def encode(game_state: GameState, player: str) -> List[float]:
@@ -45,8 +49,46 @@ def encode(game_state: GameState, player: str) -> List[float]:
 
     # Encode trump suit
     state_vector.extend(_suit_encodings[game_state.trump])
+    _assert_lead_suit_encoding(state_vector, game_state)
 
     return state_vector
+
+
+def _assert_lead_suit_encoding(state_vector: List[float], game_state: GameState) -> None:
+    lead_suit = _lead_suit_from_game_state(game_state)
+    # Assert the trump suit is encoded correctly
+    vector = _lead_suit_from_vector(state_vector)
+    decoded_lead_suit = _decode_suit(vector)
+    if decoded_lead_suit != lead_suit:
+        raise Exception(f"Lead suit encoding mismatch {vector} {decoded_lead_suit} != {lead_suit}")
+
+
+def _lead_suit_from_game_state(game_state: GameState) -> Optional[Suit]:
+    tricks = game_state.game_history.tricks
+    return tricks[-1].plays[0][1].suit \
+        if (tricks and tricks[-1].plays and len(tricks[-1].plays) != len(game_state.players)) \
+        else None
+
+
+def _lead_suit_from_vector(state_vector: List[float]) -> List[float]:
+    return state_vector[5 * MAX_HAND_SIZE:5 * MAX_HAND_SIZE + 4]
+
+
+def _decode_suit(suit_vector: List[float]) -> Optional[Suit]:
+    if suit_vector == [0.0, 0.0, 0.0, 0.0]:
+        return None
+    for suit, encoding in _suit_encodings.items():
+        if suit_vector == list(encoding):
+            return suit
+    raise ValueError(f"Invalid suit encoding {suit_vector}")
+
+
+def _decode_card(card_vector: List[float]) -> Optional[Card]:
+    suit = _decode_suit(card_vector[:4])
+    rank = card_vector[4] * constants.MAX_CARD_RANK
+    if suit is None or not (0 < rank <= constants.MAX_CARD_RANK):
+        return None
+    return Card(suit, int(rank))
 
 
 def _encode_tricks(game_state: GameState, only_current_trick: bool) -> List[float]:
@@ -119,13 +161,17 @@ def _encode_trick(trick: Trick, player_count: int) -> List[float]:
 
     return trick_vector
 
-# history = GameHistory()
-# history.tricks = [Trick()]
-# print(
-#     len(encode(GameState(turn_count=2,
-#                          game_history=history, trump=Suit.SPADES,
-#                          players=[
-#                              PlayerState("test", [Card(Suit.HEARTS, 3), Card(Suit.HEARTS, 3), Card(Suit.SPADES, 3)], 3),
-#                              PlayerState("test", [Card(Suit.HEARTS, 3), Card(Suit.HEARTS, 3), Card(Suit.SPADES, 3)], 3)]),
-#                "test")))
-# print(VECTOR_SIZE)
+
+if __name__ == "__main__":
+    history = GameHistory()
+    new_trick = Trick()
+    new_trick.add_play("test", Card(Suit.HEARTS, 3))
+    history.tricks = [new_trick]
+    l = encode(GameState(turn_count=2, game_history=history, trump=Suit.SPADES, players=[
+        PlayerState("test", [Card(Suit.HEARTS, 3), Card(Suit.HEARTS, 3), Card(Suit.SPADES, 3)], 3),
+        PlayerState("test", [Card(Suit.HEARTS, 3), Card(Suit.HEARTS, 3), Card(Suit.SPADES, 3)], 3)]), "test")
+    print(len(l))
+    print(l)
+    print(f"hand: {l[:65]}")
+    print(f"rest:{l[65:]}")
+    print(VECTOR_SIZE)

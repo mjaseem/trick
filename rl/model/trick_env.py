@@ -1,7 +1,4 @@
-import json
-
 import gymnasium as gym
-import requests
 import numpy as np
 
 import config
@@ -28,6 +25,7 @@ class TrickEnv(gym.Env):
     def reset(self, seed=None, options=None):
         # print("Resetting the environment")
         self.game_engine.reset()
+        self.game_engine.run() # Start run to get the first player's hand
         state = self.game_engine.get_game_state()
         self.state_vector = encoder.encode(game_state=state, player="AI")
         return np.array(self.state_vector, dtype=np.float32), state.__dict__
@@ -35,10 +33,16 @@ class TrickEnv(gym.Env):
     def step(self, action):
         valid_move = True
         try:
-            decode = encoder.decode(state_vector=self.state_vector, game_state=self.game_engine.get_game_state(),
-                                    action=action, player="AI")
-            self.prompting_strategy.set_next_play(decode)
-            self.game_engine.run()
+            decoded_action = encoder.decode(state_vector=self.state_vector,
+                                            game_state=self.game_engine.get_game_state(),
+                                            action=action, player="AI")
+            self.prompting_strategy.set_next_play(decoded_action)
+            try:
+                self.game_engine.run()
+            except IllegalMoveException as e:
+                print(self.game_engine.get_game_state())
+                print(self.state_vector)
+                raise Exception("Illegal move despite validation. Giving up!", e)
         except IllegalMoveException as e:
             valid_move = False
             if config.DEBUG:

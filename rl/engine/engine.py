@@ -74,11 +74,13 @@ class GameEngine:
 
                 # Otherwise, let the player play a card
                 played_card = current_player.play_card(current_trick, self.game_history, self.trump_suit)
-                current_trick.add_play(current_player, played_card)
+                current_trick.add_play(current_player.name, played_card)
                 self.current_player_index = (self.current_player_index + 1) % len(self.players)
 
             # Determine winner of the current trick
-            winner = self.determine_winner(current_trick)
+            winner_name = self.determine_winner(current_trick)
+            current_trick.winner = winner_name
+            winner = next(player for player in self.players if player.name == winner_name)
             winner.count_win()
             self.turn_count += 1
             self.current_player_index = self.players.index(winner)  # Update leading player
@@ -90,7 +92,7 @@ class GameEngine:
         if config.DEBUG:
             print(f"Game over. Winner: {final_winner.name}")
 
-    def determine_winner(self, trick: Trick) -> Player:
+    def determine_winner(self, trick: Trick) -> str:
         lead_suit = trick.plays[0][1].suit
         best_card = None
         winner = None
@@ -102,7 +104,6 @@ class GameEngine:
 
         if winner is None:
             raise ValueError("No winner found for trick")
-        trick.winner = winner.name
         return winner
 
     def get_game_state(self) -> GameState:

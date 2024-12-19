@@ -18,8 +18,8 @@ def display_scores(scores: dict) -> None:
 def main():
     # List of player configurations with strategy (replace TwoPlayerStrategy with the actual strategy)
     players = {
-        "V3": TwoPlayerStrategy(3),
-        "V4": TwoPlayerStrategy(4)
+        "V3": TwoPlayerStrategy(),
+        "V4": TwoPlayerStrategy()
     }
 
     # Create a dictionary to store results (scores against each opponent)
