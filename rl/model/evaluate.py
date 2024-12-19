@@ -19,7 +19,8 @@ model_files = [
     # "model-v4_lr0.005_reward-v0_ts-120000.zip",
     # "model-v6_lr0.005_reward-v0.zip",
     # "model-v7_lr0.005_reward-v0.zip",
-    "model-v8_reward-v1.zip"
+    "model-v8_reward-v1.zip",
+    # "model-v9_reward-v1.zip"
 ]
 
 # Function to evaluate a model

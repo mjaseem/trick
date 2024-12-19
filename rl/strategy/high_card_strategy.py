@@ -1,12 +1,12 @@
 from typing import List
 
-from engine import Strategy, Card, GameHistory, Trick
+from engine import Strategy, Card, Trick
 from engine.card import Suit
 
 
 class HighCardStrategy(Strategy):
     def choose_card(
-            self, hand: List[Card], game_history: GameHistory, trick: Trick, trump_suit: Suit
+            self, hand: List[Card], game_history: List['Trick'], trick: Trick, trump_suit: Suit
     ) -> int:
         """
         Select the highest-ranked card of the leading suit if possible; otherwise, play the lowest-ranked card.

@@ -1,24 +1,39 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple, Optional
 
 from .card import Card, Suit
-from .history import GameHistory
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlayerState:
     name: str
-    hand: List[Card]  # Assuming you have a Card class defined elsewhere
+    hand: Tuple[Card, ...]  # Assuming you have a Card class defined elsewhere
     score: int
+
     def __str__(self) -> str:
-        return f"{self.name} (Score: {self.score}, Hand: {[str(card) for card in self.hand]})"
+        return f"{self.name} : (Score: {self.score}, Hand: {[str(card) for card in self.hand]})"
 
 
-@dataclass
+@dataclass(frozen=True)
+class ImmutableTrick:
+    plays: Tuple[Tuple[str, Card], ...] = ()
+    winner: Optional[str] = None
+
+    def __str__(self) -> str:
+        return ", ".join(
+            f"{player}: {str(card)}{'!' if player == self.winner else ''}"
+            for player, card in self.plays
+        )
+
+
+@dataclass(frozen=True)
 class GameState:
-    players: List[PlayerState]
+    players: Tuple[PlayerState, ...]
     turn_count: int
-    game_history: GameHistory  # Assuming you have a GameHistory class defined elsewhere
+    tricks: Tuple[ImmutableTrick, ...]
     trump: Suit
+
     def __str__(self) -> str:
-        return f"{self.turn_count} : {str(self.players)})"
+        players_str = "\n".join([str(player) for player in self.players])
+        tricks_str = "\n".join([f"{index} : {str(trick)}" for  index, trick in enumerate(self.tricks)])
+        return f"turn count : {self.turn_count} \n{players_str} \n{tricks_str} \nTrump: {self.trump.value}"

@@ -3,7 +3,6 @@ from typing import List, TYPE_CHECKING
 from .exceptions import IllegalMoveException
 from .card import Card, Suit
 if TYPE_CHECKING:
-    from .history import GameHistory
     from .strategy import Strategy
     from .trick import Trick
 
@@ -17,7 +16,7 @@ class Player:
     def set_hand(self, hand: List['Card']) -> None:
         self.hand = hand
 
-    def play_card(self, trick: 'Trick', history:'GameHistory' , trump_suit: 'Suit') -> Card:
+    def play_card(self, trick: 'Trick', history:List['Trick'] , trump_suit: 'Suit') -> Card:
         if not self.hand:
             raise ValueError(f"Hand is empty. Can't play!")  # Equivalent to IllegalStateException in Java
 

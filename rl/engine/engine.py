@@ -1,13 +1,13 @@
+import copy
 import random
 from typing import Dict, List, Optional
 
 import config
 
 from .constants import MAX_CARDS_IN_HAND
-from .state import GameState, PlayerState
+from .state import GameState, PlayerState, ImmutableTrick
 from .strategy import Strategy
 from .player import Player
-from .history import GameHistory
 from .deck import Deck
 from .card import Suit
 from .trick import Trick
@@ -22,7 +22,7 @@ class GameEngine:
         self.deck = Deck()
         self.trump_suit: Optional[Suit] = None
         self.current_player_index = 0
-        self.game_history = GameHistory()
+        self.tricks= []
         self.turn_count = 0
         self.reset()
 
@@ -33,7 +33,7 @@ class GameEngine:
         for player in self.players:
             player.reset()
         self.turn_count = 0
-        self.game_history.reset()
+        self.tricks = []
         self.trump_suit = random.choice(list(Suit))
         self.current_player_index = random.randint(0, len(self.players) - 1)
         if config.DEBUG:
@@ -59,11 +59,10 @@ class GameEngine:
             if config.DEBUG:
                 print("; ".join(str(player) for player in self.players))
 
-            starting_a_trick = (self.game_history.get_tricks() and
-                                len(self.game_history.get_tricks()[-1].plays) < len(self.players))
-            current_trick = self.game_history.get_tricks()[-1] if starting_a_trick else Trick()
-            self.game_history.add_trick(current_trick)
+            if not (self.tricks and len(self.tricks[-1].plays) < len(self.players)):
+                self.tricks.append(Trick())
 
+            current_trick = self.tricks[-1]
             while len(current_trick.plays) < len(self.players):
                 current_player = self.players[self.current_player_index]
 
@@ -73,7 +72,7 @@ class GameEngine:
                     return  # Return to allow the player to provide input or wait
 
                 # Otherwise, let the player play a card
-                played_card = current_player.play_card(current_trick, self.game_history, self.trump_suit)
+                played_card = current_player.play_card(current_trick, self.tricks, self.trump_suit)
                 current_trick.add_play(current_player.name, played_card)
                 self.current_player_index = (self.current_player_index + 1) % len(self.players)
 
@@ -91,6 +90,7 @@ class GameEngine:
         final_winner = max(self.players, key=lambda player: player.score)
         if config.DEBUG:
             print(f"Game over. Winner: {final_winner.name}")
+            print(self.get_game_state())
 
     def determine_winner(self, trick: Trick) -> str:
         lead_suit = trick.plays[0][1].suit
@@ -109,10 +109,11 @@ class GameEngine:
     def get_game_state(self) -> GameState:
         """Returns the current game state."""
         player_states = [
-            PlayerState(player.name, player.hand, player.score)  # Assuming 'hand' and 'score' are attributes of Player
+            PlayerState(player.name, tuple(player.hand), player.score)  # Assuming 'hand' and 'score' are attributes of Player
             for player in self.players
         ]
-        return GameState(players=player_states, turn_count=self.turn_count, game_history=self.game_history,
+        return GameState(players=tuple(player_states), turn_count=self.turn_count,
+                         tricks=tuple(ImmutableTrick(plays=tuple(trick.plays), winner=trick.winner) for trick in self.tricks),
                          trump=self.trump_suit)
 
     def get_scores(self) -> Dict[str, int]:

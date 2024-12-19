@@ -2,13 +2,12 @@ from typing import List, Optional
 
 from engine import Strategy
 from engine.card import Card, Suit
-from engine.history import GameHistory
 from engine.trick import Trick
 
 
 class TwoPlayerStrategy(Strategy):
     def choose_card(
-            self, hand: List[Card], game_history: GameHistory, trick: Trick, trump_suit: Suit
+            self, hand: List[Card], game_history: List[Trick], trick: Trick, trump_suit: Suit
     ) -> int:
         is_first_player = len(trick.plays) == 0
 

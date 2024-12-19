@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -8,10 +9,10 @@ class Suit(Enum):
     SPADES = "♠"
 
 
+@dataclass(frozen=True)
 class Card:
-    def __init__(self, suit: Suit, rank: int) -> None:
-        self.suit = suit
-        self.rank = rank
+    suit: Suit
+    rank: int
 
     def beats(self, other: "Card", lead_suit: Suit, trump_suit: Suit) -> bool:
         if self.suit == trump_suit and other.suit != trump_suit:
