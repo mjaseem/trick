@@ -15,6 +15,7 @@ PLAYER = "AI"
 class TrickEnv(gym.Env):
     def __init__(self):
         super(TrickEnv, self).__init__()
+        self.fake_enabled = True
         self.faked_state = None
         self.state_vector = None
         self.prompting_strategy = PromptingStrategy()
@@ -61,7 +62,7 @@ class TrickEnv(gym.Env):
         done = state.turn_count >= constants.MAX_CARDS_IN_HAND
 
         # fake states with leading hand sporadically
-        if not done and random.randint(0, 1):
+        if not done and self.fake_enabled and random.randint(0, 1):
             self.faked_state = self._fake_game_state(state)
             state = self.faked_state
             if config.DEBUG: print("Faked state: ", state)

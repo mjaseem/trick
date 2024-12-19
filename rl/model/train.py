@@ -23,18 +23,18 @@ def main():
     os.makedirs(checkpoints_dir, exist_ok=True)
 
 
-    timesteps = 300000
+    timesteps = 2000000
     checkpoint_callback = CheckpointCallback(save_freq=timesteps // 3, save_path=checkpoints_dir)
     env = gym.make("TrickEnv-v0")
     #     model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir, learning_rate=0.01,
     #             clip_range=0.5, ent_coef=0.02,
     #             )
-    model = PPO.load(models_dir + "model-v8_reward-v1.zip", env=env, custom_objects = { 'learning_rate': 0.001})
+    model = PPO.load(models_dir + "model-v11_reward-v1.zip", env=env, custom_objects = { 'learning_rate': 0.0001})
     model.verbose = 1
 
     if train:
         model.learn(total_timesteps=timesteps, progress_bar=True, callback=checkpoint_callback)
-        model.save(models_dir + "model-v9_reward-v1.zip")
+        model.save(models_dir + "model-v12_reward-v1.zip")
         print("Model training completed and saved")
 
     # Test the trained model
