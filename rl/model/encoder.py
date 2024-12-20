@@ -28,7 +28,7 @@ def decode_and_validate(state_vector: List[float], game_state: GameState, action
             if card.suit == lead_card.suit:
                 raise IllegalMoveException(player, f"Must follow suit: {str(lead_card)}. But picked {selected_card}")
     if selected_card not in player_state.hand:
-        raise Exception(player, f"Card {selected_card} not in hand: {selected_card}")
+        raise Exception(player, f"Card {selected_card} not in hand: {player_state.hand}")
     return player_state.hand.index(selected_card)
 
 

@@ -1,4 +1,5 @@
 import random
+import time
 
 import gymnasium as gym
 import numpy as np
@@ -13,6 +14,8 @@ PLAYER = "AI"
 
 
 class TrickEnv(gym.Env):
+    env_step_times = []
+    train_step_times = []
     def __init__(self):
         super(TrickEnv, self).__init__()
         self.fake_enabled = True
@@ -37,9 +40,9 @@ class TrickEnv(gym.Env):
         return np.array(self.state_vector, dtype=np.float32), state.__dict__
 
     def step(self, action: int):
-        if self.faked_state:
-            return self._handle_response_to_fake_state(action)
-
+        # if self.faked_state:
+        #     return self._handle_response_to_fake_state(action)
+        #
         valid_move = True
         try:
             decoded_action = encoder.decode_and_validate(state_vector=self.state_vector,
@@ -57,53 +60,68 @@ class TrickEnv(gym.Env):
             if config.DEBUG:
                 print("Illegal move. Shall be punished. ", e)
 
-
         state = self.game_engine.get_game_state()
         done = state.turn_count >= constants.MAX_CARDS_IN_HAND
 
         # fake states with leading hand sporadically
-        if not done and self.fake_enabled and random.randint(0, 1):
-            self.faked_state = self._fake_game_state(state)
-            state = self.faked_state
-            if config.DEBUG: print("Faked state: ", state)
+        # if not done and self.fake_enabled and random.randint(0, 1):
+        #     self.faked_state = self._fake_game_state(state)
+        #     state = self.faked_state
+        #     if config.DEBUG: print("Faked state: ", state)
 
         self.state_vector = encoder.encode(game_state=state, player="AI")
-        return np.array(self.state_vector, dtype=np.float32), 10 if valid_move else -100, done, False, state.__dict__
+        return np.array(self.state_vector, dtype=np.float32), self._score(
+            state) if valid_move else -100, done, False, state.__dict__
 
-    def _handle_response_to_fake_state(self, action: int):
-        valid_move = True
-        try:
-            game_state = self.faked_state
-            self.faked_state = None
-            encoder.decode_and_validate(state_vector=self.state_vector,
-                                        game_state=game_state,
-                                        action=action, player=PLAYER)
-        except IllegalMoveException as e:
-            valid_move = False
-            if config.DEBUG:
-                print("Illegal move. Shall be punished. ", e)
-
-        state = self.game_engine.get_game_state()
-        done = state.turn_count >= constants.MAX_CARDS_IN_HAND
-        self.state_vector = encoder.encode(game_state=state, player=PLAYER)
-        return np.array(self.state_vector, dtype=np.float32), 10 if valid_move else -100, done, False, state.__dict__
-
-    def _fake_game_state(self, state: GameState) -> GameState:
-        player_state = next((p for p in state.players if p.name == PLAYER), None)
-        random_card_from_hand = random.choice(player_state.hand)
-        lead_card_for_training = Card(random_card_from_hand.suit,
-                                      random.choice([i for i in range(1, 15) if i != random_card_from_hand.rank]))
-        trick = ImmutableTrick(plays=(("Engine", lead_card_for_training),))
-        tricks_as_list = list(state.tricks)
-        if not state.tricks or len(state.tricks[-1].plays) == len(state.players):
-            tricks_as_list.append(trick)
-        else:
-            tricks_as_list[-1] = trick
-        return GameState(players=state.players, trump=state.trump, tricks=tuple(tricks_as_list), turn_count=state.turn_count)
+    # def _handle_response_to_fake_state(self, action: int):
+    #     valid_move = True
+    #     try:
+    #         game_state = self.faked_state
+    #         self.faked_state = None
+    #         encoder.decode_and_validate(state_vector=self.state_vector,
+    #                                     game_state=game_state,
+    #                                     action=action, player=PLAYER)
+    #     except IllegalMoveException as e:
+    #         valid_move = False
+    #         if config.DEBUG:
+    #             print("Illegal move. Shall be punished. ", e)
+    #
+    #     state = self.game_engine.get_game_state()
+    #     done = state.turn_count >= constants.MAX_CARDS_IN_HAND
+    #     self.state_vector = encoder.encode(game_state=state, player=PLAYER)
+    #     return np.array(self.state_vector, dtype=np.float32), self._score(
+    #         state) if valid_move else -200, done, False, state.__dict__
+    #
+    # def _fake_game_state(self, state: GameState) -> GameState:
+    #     player_state = next((p for p in state.players if p.name == PLAYER), None)
+    #     random_card_from_hand = random.choice(player_state.hand)
+    #     lead_card_for_training = Card(random_card_from_hand.suit,
+    #                                   random.choice([i for i in range(1, 15) if i != random_card_from_hand.rank]))
+    #     trick = ImmutableTrick(plays=(("Engine", lead_card_for_training),))
+    #     tricks_as_list = list(state.tricks)
+    #     if not state.tricks or len(state.tricks[-1].plays) == len(state.players):
+    #         tricks_as_list.append(trick)
+    #     else:
+    #         tricks_as_list[-1] = trick
+    #     return GameState(players=state.players, trump=state.trump, tricks=tuple(tricks_as_list),
+    #                      turn_count=state.turn_count)
 
     def render(self, mode="human"):
         state = self.game_engine.get_game_state()
         print("; ".join(str(player) for player in state.players))  # Optional visualization logic
+
+    def _score(self, state: GameState) -> int:
+        score = 0
+        if state.turn_count >= constants.MAX_CARDS_IN_HAND:
+            player_wins = sum(1 for trick in state.tricks if trick.winner == PLAYER)
+            if player_wins > len(state.tricks) // 2:
+                score += 100
+        for trick in reversed(state.tricks):
+            if trick.winner:
+                if trick.winner == PLAYER: score += 50
+                break
+
+        return score
 
 
 gym.register("TrickEnv-v0", entry_point="trick_env:TrickEnv", max_episode_steps=200)

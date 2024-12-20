@@ -2,7 +2,10 @@ import os
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
+
+import config
 import trick_env  # Ensures the environment is registered
+from model.train import parse_args
 
 # Directory containing your models
 models_folder = "models"
@@ -19,16 +22,21 @@ model_files = [
     # "model-v4_lr0.005_reward-v0_ts-120000.zip",
     # "model-v6_lr0.005_reward-v0.zip",
     # "model-v7_lr0.005_reward-v0.zip",
-    "model-v8_reward-v1.zip",
-    "model-v10_reward-v1.zip",
-    "model-v9_reward-v1.zip"
+    # "model-v8_reward-v1.zip",
+    # "model-v10_reward-v1.zip",
+    # "model-v9_reward-v1.zip",
+    # "rl_model_4000896_steps.zip",
+    "model-v13_reward-v1.zip",
 ]
 
 # Function to evaluate a model
-def evaluate_model(model, env, n_eval_episodes=10):
+def evaluate_model(model, env, n_eval_episodes=1):
     mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=n_eval_episodes)
     return mean_reward, std_reward
 
+# from train import parse_args
+args = parse_args()
+config.DEBUG = args.debug
 # Store results for all models
 results = []
 
