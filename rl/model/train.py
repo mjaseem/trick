@@ -14,7 +14,6 @@ def main():
     train = args.train
     config.DEBUG = args.debug
 
-
     models_dir = "./models/"
     log_dir = "./logs/"
     checkpoints_dir = './model_checkpoints/'
@@ -22,19 +21,20 @@ def main():
     os.makedirs(log_dir, exist_ok=True)
     os.makedirs(checkpoints_dir, exist_ok=True)
 
-
-    timesteps = 2000000
-    checkpoint_callback = CheckpointCallback(save_freq=timesteps // 3, save_path=checkpoints_dir)
+    timesteps = 10000000
+    checkpoint_callback = CheckpointCallback(save_freq=timesteps // 20, save_path=checkpoints_dir)
     env = gym.make("TrickEnv-v0")
-    #     model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir, learning_rate=0.01,
-    #             clip_range=0.5, ent_coef=0.02,
-    #             )
-    model = PPO.load(models_dir + "model-v11_reward-v1.zip", env=env, custom_objects = { 'learning_rate': 0.0001})
+        # model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir, learning_rate=0.01,
+        #         clip_range=0.5, ent_coef=0.02,
+        #         )
+    model = PPO.load(models_dir + "model-v13_reward-v1.zip", env=env,
+                     custom_objects={'learning_rate': linear_decay_schedule(0.00005)})
     model.verbose = 1
 
     if train:
-        model.learn(total_timesteps=timesteps, progress_bar=True, callback=checkpoint_callback)
-        model.save(models_dir + "model-v12_reward-v1.zip")
+        model.learn(total_timesteps=timesteps, progress_bar=True, callback=checkpoint_callback,
+                    reset_num_timesteps=False)
+        model.save(models_dir + "model-v13_reward-v1.zip")
         print("Model training completed and saved")
 
     # Test the trained model
@@ -50,11 +50,20 @@ def main():
                 raise Exception("episode is done but there are still cards in hand!")
             return
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Set train and debug flags.")
     parser.add_argument('--train', action='store_true', help="Flag to enable training")
     parser.add_argument('--debug', action='store_true', help="Flag to enable debug mode")
     return parser.parse_args()
+
+
+def linear_decay_schedule(initial_lr: float):
+    def schedule(progress_remaining: float) -> float:
+        return initial_lr * progress_remaining
+
+    return schedule
+
 
 if __name__ == "__main__":
     main()
